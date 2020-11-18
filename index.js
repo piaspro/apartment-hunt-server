@@ -11,7 +11,7 @@ const app = express()
 app.use(bodyParser.json());
 app.use(cors())
 
-const uri = "mongodb+srv://apartmentUser:uJHArSG7Zz6ruhs@cluster0.z0xlc.mongodb.net/apartmentDb?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_USER}@cluster0.z0xlc.mongodb.net/${process.env.DB_USER}?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 
@@ -28,20 +28,34 @@ client.connect(err => {
         res.send(result.insertedCount > 0)
       })
 
-    // Show Services in the home page
+    // Show Bookings
     app.get('/getBookings', (req, res) => {
       apartmentBookingCollection.find({})
         .toArray((err, documents) => {
           res.send(documents)
         })
     });
-    
+
+    // Update status
+    app.patch('/update/:id', (req, res) => {
+      UserServiceCollection.updateOne({ _id: ObjectId(req.params.id) },
+        {
+          $set: { project: req.body.project }
+        })
+        .then(result => {
+          console.log(result)
+          res.send(result.modifiedCount > 0)
+        })
+    });
+
   });
 
   app.get('/', (req, res) => {
-    res.send("connected")
-  });
+    res.send("Connected")
+  })
 });
+
+
 
 
 app.listen(process.env.PORT || 5000);
